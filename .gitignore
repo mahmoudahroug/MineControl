@@ -1,0 +1,13 @@
+# Dependencies
+/node_modules
+
+# Environment variables - VERY IMPORTANT
+.env
+
+# Logs
+*.log
+screenlog.*
+
+# Optional OS/editor files
+.DS_Store
+.vscode/
