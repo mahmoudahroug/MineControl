@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Clean up the apt cache to keep the image size small
     rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /usr/src/app && chown -R node:node /usr/src/app
+
 WORKDIR /usr/src/app
 
 USER node
