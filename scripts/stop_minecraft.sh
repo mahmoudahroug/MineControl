@@ -1,3 +1,3 @@
-# server/scripts/stop_minecraft.sh
 #!/bin/bash
-echo "Pretend Minecraft is stopping..."
+# Use RCON to gracefully stop the server.
+docker exec minecraft_server rcon-cli stop

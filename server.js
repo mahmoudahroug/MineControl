@@ -1,6 +1,8 @@
 const express = require("express");
 const { exec, execFile } = require("child_process");
 const path = require("path");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const app = express();
@@ -11,6 +13,27 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // --- Routes ---
+
+app.post("/api/login", async (req, res) => {
+    const { password } = req.body;
+    if (!password) {
+        return res.status(400).send({ message: "Password is required" });
+    }
+
+    try {
+        const isValid = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+        if (!isValid) {
+            return res.status(401).send({ message: "Invalid password" });
+        }
+        // Generate JWT token
+        const token = jwt.sign({ username: "admin" }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ token });
+    }
+    catch (error) {
+        console.error("Error during login:", error);
+        return res.status(500).send({ message: "Internal server error" });
+    }
+});
 
 app.get("/api/status", (req, res) => {
     // Check if a screen session named "mc-server" exists.
@@ -24,13 +47,14 @@ app.get("/api/status", (req, res) => {
     });
 });
 
-app.post("/api/action", (req, res) => {
-    const { password, action } = req.body;
-
-    if (password !== process.env.ADMIN_PASSWORD) {
-        return res.status(401).send({ message: "Invalid password" });
+app.post("/api/action", authenticateToken, async (req, res) => {
+    const { action } = req.body;
+    
+    // optional because no other user
+    if (req.user.username !== "admin") {
+        return res.status(403).send({ message: "Forbidden" });
     }
-
+    
     if (action !== 'start' && action !== 'stop') {
         return res.status(400).send({ message: "Invalid action" });
     }
@@ -49,6 +73,22 @@ app.post("/api/action", (req, res) => {
     });
 });
 
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
+
+    if (token == null) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Token is invalid or expired' });
+        }
+        req.user = user;
+        next(); // Token is valid, proceed to the route handler
+    });
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

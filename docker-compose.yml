@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  # This is the service for your Node.js MineControl app
+  controller-app:
+    build: .
+    container_name: minecontrol_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./.env
+    volumes:
+      # Mount the host's Docker socket into the container to run 'docker' commands on the host
+      - /var/run/docker.sock:/var/run/docker.sock

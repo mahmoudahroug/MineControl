@@ -1,0 +1,31 @@
+FROM node:18-slim
+
+# Switch to the root user temporarily to install necessary packages
+USER root
+
+# Install the Docker CLI client inside this container so it can run 'docker' commands
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && apt-get install -y docker-ce-cli
+
+WORKDIR /usr/src/app
+
+USER node
+
+# Copy package files, changing ownership to the 'node' user
+COPY --chown=node:node package*.json ./
+
+RUN npm install
+
+# Copy the rest of the application code, changing ownership
+COPY --chown=node:node . .
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# The command to run when the container starts
+CMD [ "node", "server.js" ]

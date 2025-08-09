@@ -4,92 +4,295 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MineControl</title>
-    <!-- Basic styling for better presentation -->
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .panel { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
-        h1 { color: #333; }
-        #server-status { font-size: 1.2rem; font-weight: bold; margin: 1rem 0; }
-        .online { color: #28a745; }
-        .offline { color: #dc3545; }
-        input, button { padding: 0.75rem; margin: 0.5rem; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; }
-        button { cursor: pointer; background-color: #007bff; color: white; border-color: #007bff; }
-        button:hover { background-color: #0056b3; }
-        #response-message { margin-top: 1rem; color: #555; }
+        /* --- General Styling --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .panel {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        h1 {
+            color: #1c1e21;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        /* --- Form Elements --- */
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            border: 1px solid #dddfe2;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 12px 20px;
+            margin: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        /* --- Specific Buttons --- */
+        .btn-primary {
+            background-color: #1877f2;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #166fe5;
+        }
+
+        .btn-start {
+            background-color: #42b72a;
+            color: white;
+        }
+        .btn-start:hover {
+            background-color: #36a420;
+        }
+
+        .btn-stop {
+            background-color: #fa3e3e;
+            color: white;
+        }
+        .btn-stop:hover {
+            background-color: #e03838;
+        }
+        
+        #logout-button {
+            background: none;
+            border: 1px solid #ccc;
+            color: #555;
+            font-weight: normal;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            margin-top: 1.5rem;
+        }
+        #logout-button:hover {
+            background-color: #f0f2f5;
+        }
+
+        /* --- Status and Messages --- */
+        #server-status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 1.5rem 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .online {
+            color: #36a420;
+            background-color: #e9f5e7;
+        }
+        
+        .offline {
+            color: #e03838;
+            background-color: #fcebeb;
+        }
+        
+        .message {
+            margin-top: 1rem;
+            color: #606770;
+            height: 20px; /* Reserve space to prevent layout shift */
+        }
+        .error-message {
+            color: #fa3e3e;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
 
     <div class="panel">
-        <h1>MineControl Panel</h1>
-        
-        <div id="server-status">Checking status...</div>
+        <!-- Login View: Shown by default -->
+        <div id="login-view">
+            <h1>Login to MineControl</h1>
+            <form id="login-form">
+                <input type="password" id="password-input" placeholder="Password" required />
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+            <p id="login-message" class="message"></p>
+        </div>
 
-        <form id="control-form">
-            <input type="password" name="password" placeholder="Password" required />
-            <button type="submit" name="action" value="start">Start Server</button>
-            <button type="submit" name="action" value="stop">Stop Server</button>
-        </form>
-        
-        <p id="response-message"></p>
+        <!-- Dashboard View: Hidden by default -->
+        <div id="dashboard-view" style="display: none;">
+            <h1>MineControl Panel</h1>
+            <div id="server-status">Checking status...</div>
+            <form id="control-form">
+                <button type="submit" name="action" value="start" class="btn-start">Start Server</button>
+                <button type="submit" name="action" value="stop" class="btn-stop">Stop Server</button>
+            </form>
+            <p id="dashboard-message" class="message"></p>
+            <button id="logout-button">Logout</button>
+        </div>
     </div>
 
     <script>
-        const form = document.getElementById('control-form');
-        const statusDiv = document.getElementById('server-status');
-        const responseMessage = document.getElementById('response-message');
+        // Wait for the DOM to be fully loaded before running the script
+        window.addEventListener('DOMContentLoaded', () => {
+            // === DOM Element References ===
+            const loginView = document.getElementById('login-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            
+            const loginForm = document.getElementById('login-form');
+            const passwordInput = document.getElementById('password-input');
+            const loginMessage = document.getElementById('login-message');
 
-        // Function to check the server status
-        const checkStatus = async () => {
-            try {
-                const response = await fetch('/api/status');
-                const data = await response.json();
-                
-                statusDiv.textContent = `Server is ${data.status}`;
-                statusDiv.className = data.status.toLowerCase(); // Adds 'online' or 'offline' class
-            } catch (error) {
-                statusDiv.textContent = 'Could not get server status.';
-                statusDiv.className = 'offline';
-            }
-        };
+            const controlForm = document.getElementById('control-form');
+            const statusDiv = document.getElementById('server-status');
+            const dashboardMessage = document.getElementById('dashboard-message');
+            const logoutButton = document.getElementById('logout-button');
 
-        // Handle form submission without reloading the page
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Stop the default page reload
+            let statusInterval; // To hold the setInterval ID
 
-            // Figure out which button was clicked
-            const action = event.submitter.value;
-            const password = form.elements.password.value;
+            // === Core Functions ===
 
-            responseMessage.textContent = `Performing action: ${action}...`;
+            // Function to check the server status
+            const checkStatus = async () => {
+                try {
+                    const response = await fetch('/api/status');
+                    const data = await response.json();
+                    
+                    statusDiv.textContent = `Server is ${data.status}`;
+                    statusDiv.className = data.status.toLowerCase(); // Applies 'online' or 'offline' class
+                } catch (error) {
+                    statusDiv.textContent = 'Could not get server status.';
+                    statusDiv.className = 'offline';
+                }
+            };
 
-            try {
-                const response = await fetch('/api/action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password, action })
-                });
+            // Show the dashboard and hide the login form
+            const showDashboard = () => {
+                loginView.style.display = 'none';
+                dashboardView.style.display = 'block';
+                checkStatus(); // Initial status check
+                // Start polling for status every 10 seconds
+                statusInterval = setInterval(checkStatus, 10000); 
+            };
+            
+            // Show the login form and hide the dashboard
+            const showLogin = () => {
+                dashboardView.style.display = 'none';
+                loginView.style.display = 'block';
+                passwordInput.value = ''; // Clear password field
+                loginMessage.textContent = '';
+                loginMessage.className = 'message';
+                // Stop polling for status when logged out
+                if (statusInterval) clearInterval(statusInterval); 
+            };
 
-                const result = await response.json();
+            // === Event Listeners ===
 
-                if (!response.ok) {
-                    // Handle HTTP errors like 401 or 500
-                    throw new Error(result.message || 'An unknown error occurred.');
+            // Handle Login Form Submission
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                loginMessage.textContent = 'Logging in...';
+                loginMessage.className = 'message';
+
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: passwordInput.value }),
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Login failed.');
+                    }
+                    
+                    // On successful login, store the token and switch to dashboard view
+                    localStorage.setItem('authToken', result.token);
+                    showDashboard();
+
+                } catch (error) {
+                    loginMessage.textContent = error.message;
+                    loginMessage.className = 'message error-message';
+                }
+            });
+
+            // Handle Server Action (Start/Stop) Submission
+            controlForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const action = event.submitter.value;
+                const token = localStorage.getItem('authToken');
+
+                if (!token) {
+                    alert('Authentication error. Please log in again.');
+                    showLogin();
+                    return;
                 }
                 
-                responseMessage.textContent = result.message;
-                // After an action, re-check the status in a couple of seconds
-                setTimeout(checkStatus, 2000); 
-            } catch (error) {
-                responseMessage.textContent = `Error: ${error.message}`;
-                responseMessage.style.color = 'red';
+                dashboardMessage.textContent = `Executing: ${action}...`;
+                dashboardMessage.className = 'message';
+
+                try {
+                    const response = await fetch('/api/action', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` // IMPORTANT: Attach the token
+                        },
+                        body: JSON.stringify({ action })
+                    });
+                    
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.message || 'Action failed.');
+                    }
+
+                    dashboardMessage.textContent = result.message;
+                    // Re-check status after a couple seconds to see the change
+                    setTimeout(checkStatus, 2000);
+
+                } catch (error) {
+                    dashboardMessage.textContent = `Error: ${error.message}`;
+                    dashboardMessage.className = 'message error-message';
+                }
+            });
+
+            // Handle Logout
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('authToken');
+                showLogin();
+            });
+
+
+            // === Initialization on Page Load ===
+            // Check if a token already exists from a previous session
+            if (localStorage.getItem('authToken')) {
+                showDashboard();
+            } else {
+                showLogin();
             }
         });
-
-        // Check status when the page loads, and then every 10 seconds
-        checkStatus();
-        setInterval(checkStatus, 10000);
     </script>
-
 </body>
 </html>

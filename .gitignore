@@ -11,3 +11,8 @@ screenlog.*
 # Optional OS/editor files
 .DS_Store
 .vscode/
+
+#temporary files
+temp.js
+
+request.rest
