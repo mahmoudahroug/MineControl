@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:20-slim
 
 # Switch to the root user temporarily to install necessary packages
 USER root
