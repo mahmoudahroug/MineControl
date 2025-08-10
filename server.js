@@ -19,9 +19,6 @@ app.post("/api/login", async (req, res) => {
     if (!password) {
         return res.status(400).send({ message: "Password is required" });
     }
-    console.log("--- Login Attempt ---");
-    console.log("Password Received from User:", password);
-    console.log("Hash Stored in Environment:", process.env.ADMIN_PASSWORD_HASH);
 
     try {
         const isValid = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);

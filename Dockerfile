@@ -1,8 +1,5 @@
 FROM node:20-slim
 
-# Switch to the root user temporarily to install necessary packages
-USER root
-
 # Install the Docker CLI client inside this container so it can run 'docker' commands
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
@@ -15,22 +12,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Clean up the apt cache to keep the image size small
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /usr/src/app && chown -R node:node /usr/src/app
-
 WORKDIR /usr/src/app
 
-USER node
-
-# Copy package files, changing ownership to the 'node' user
-COPY --chown=node:node package*.json ./
+COPY package*.json ./
 
 RUN npm install
 
-# Copy the rest of the application code, changing ownership
-COPY --chown=node:node . .
+COPY . .
 
-# Expose the port the app runs on
+RUN chmod +x /usr/src/app/scripts/*.sh
+
 EXPOSE 3000
 
-# The command to run when the container starts
 CMD [ "node", "server.js" ]
