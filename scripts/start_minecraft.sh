@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker compose start minecraft-server
+docker start minecraft-server
