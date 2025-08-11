@@ -13,3 +13,21 @@ services:
     volumes:
       # Mount the host's Docker socket into the container to run 'docker' commands on the host
       - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - minecraft-server
+
+  minecraft-server:
+    image: itzg/minecraft-server
+    container_name: minecontrol_minecraft
+    restart: on-failure
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      TYPE: "FABRIC"
+      VERSION: "1.21.8"
+      MEMORY: "5G"
+      ENABLE_RCON: "TRUE"
+      RCON_PASSWORD: ${RCON_PASSWORD}
+    volumes:
+      - ${MINECRAFT_DATA_PATH}:/data
