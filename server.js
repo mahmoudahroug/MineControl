@@ -37,7 +37,7 @@ app.post("/api/login", async (req, res) => {
 
 app.get("/api/status", (req, res) => {
     // Check if a screen session named "mc-server" exists.
-    exec("screen -ls | grep -q 'mc-server'", (error, stdout, stderr) => {
+    exec("docker ps | grep minecraft-server", (error, stdout, stderr) => {
         if (error) {
             // The `grep` command returns an error if it doesn't find a match.
             // This means the server is offline.

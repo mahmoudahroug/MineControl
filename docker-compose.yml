@@ -18,7 +18,7 @@ services:
 
   minecraft-server:
     image: itzg/minecraft-server
-    container_name: minecontrol_minecraft
+    container_name: minecraft-server
     restart: on-failure
     ports:
       - "25565:25565"
