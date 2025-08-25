@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl_data:/etc/letsencrypt
+    depends_on:
+      - controller-app
   # This is the service for your Node.js MineControl app
   controller-app:
     build: .
