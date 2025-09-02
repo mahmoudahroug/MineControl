@@ -37,13 +37,19 @@ app.post("/api/login", async (req, res) => {
 
 app.get("/api/status", (req, res) => {
     // Check if a screen session named "mc-server" exists.
-    exec("docker ps | grep minecraft-server", (error, stdout, stderr) => {
+    exec("docker ps | grep minecraft-server ", (error, stdout, stderr) => {
         if (error) {
             // The `grep` command returns an error if it doesn't find a match.
             // This means the server is offline.
             return res.json({ status: 'Offline' });
         }
-        res.json({ status: 'Online' });
+        // If health status =  healthy then online else it is still starting
+        exec("docker ps --filter name=minecraft-server --format 'table {{.Status}}' | grep healthy", (error, stdout, stderr) => {
+            if (error) {
+                return res.json({ status: 'Starting' });
+            }
+            res.json({ status: 'Online' });
+        });
     });
 });
 
